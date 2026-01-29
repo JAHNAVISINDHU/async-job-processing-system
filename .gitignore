@@ -1,0 +1,25 @@
+node_modules/
+.env
+output/*
+!output/.gitkeep
+.DS_Store
+npm-debug.log
+
+# Build cache and temporary files
+.buildx-cache/
+.cache/
+.npm/
+coverage/
+dist/
+
+n# Editor directories
+.vscode/
+.idea/
+
+n# Logs
+*.log
+
+n# Temp/test artifacts
+tmp*
+submission.json
+payload_*.json

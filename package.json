@@ -1,0 +1,25 @@
+{
+  "name": "async-job-processing-system",
+  "version": "1.0.0",
+  "description": "Background job processing system with Redis and Postgres",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "start:worker": "node src/worker.js",
+    "test": "jest --runInBand",
+    "test:integration": "node tests/integration.js",
+    "smoke": "node scripts/smoke.js"
+  },
+  "dependencies": {
+    "axios": "^1.4.0",
+    "dotenv": "^16.0.0",
+    "express": "^4.18.2",
+    "nodemailer": "^6.9.3",
+    "pg": "^8.11.0",
+    "redis": "^4.6.7"
+  },
+  "devDependencies": {
+    "jest": "^29.6.1",
+    "puppeteer": "^20.9.0"
+  }
+}

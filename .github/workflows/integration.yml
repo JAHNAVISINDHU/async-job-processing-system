@@ -1,0 +1,90 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache buildx state
+        uses: actions/cache@v4
+        with:
+          path: ./.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ hashFiles('**/Dockerfile', '**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Pre-build images with buildx (uses cache)
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          load: true
+          tags: async-job-processing-system-app:ci,async-job-processing-system-worker:ci
+          cache-from: type=local,src=./.buildx-cache
+          cache-to: type=local,dest=./.buildx-cache,mode=max
+
+      - name: Copy .env.example to .env
+        run: cp .env.example .env
+
+      - name: Inject admin credentials from secrets
+        if: ${{ secrets.ADMIN_USER && secrets.ADMIN_PASS }}
+        run: |
+          echo "ADMIN_USER=${{ secrets.ADMIN_USER }}" >> .env
+          echo "ADMIN_PASS=${{ secrets.ADMIN_PASS }}" >> .env
+        env:
+          ADMIN_USER: ${{ secrets.ADMIN_USER }}
+          ADMIN_PASS: ${{ secrets.ADMIN_PASS }}
+
+      - name: Admin creds status
+        run: |
+          if [ -n "${{ secrets.ADMIN_USER }}" ] && [ -n "${{ secrets.ADMIN_PASS }}" ]; then
+            echo "Admin credentials injected into .env"
+          else
+            echo "ADMIN_USER/ADMIN_PASS secrets not present; admin UI test will be skipped in CI or run unprotected."
+          fi
+
+      - name: Start services with Docker Compose
+        run: docker-compose up --build -d
+
+      - name: Wait for API to be healthy
+        run: |
+          for i in {1..60}; do
+            if curl -sSf http://localhost:3000/health >/dev/null 2>&1; then
+              echo "API healthy"; exit 0;
+            fi
+            echo "waiting for api... ($i)"; sleep 2;
+          done
+          echo "API failed to become healthy"; exit 1
+
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run integration tests
+        run: npm run test:integration
+
+      - name: Tear down
+        if: always()
+        run: docker-compose down -v --remove-orphans

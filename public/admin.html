@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Job Admin</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 2rem; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+    th { background: #f4f4f4; }
+    button { margin-right: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Failed Jobs</h1>
+  <div id="status">Loading...</div>
+  <table id="jobs">
+    <thead><tr><th>ID</th><th>Type</th><th>Attempts</th><th>Error</th><th>Actions</th></tr></thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    async function fetchFailed() {
+      document.getElementById('status').textContent = 'Fetching failed jobs...';
+      const res = await fetch('/admin/failed');
+      const data = await res.json();
+      const tbody = document.querySelector('#jobs tbody');
+      tbody.innerHTML = '';
+      for (const j of data.jobs) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${j.id}</td><td>${j.type}</td><td>${j.attempts}</td><td>${j.error || ''}</td><td></td>`;
+        const actions = tr.querySelector('td:last-child');
+        const retryBtn = document.createElement('button'); retryBtn.textContent='Retry';
+        retryBtn.onclick = async () => { await fetch(`/admin/jobs/${j.id}/retry`, { method: 'POST' }); fetchFailed(); };
+        const dlqBtn = document.createElement('button'); dlqBtn.textContent='Move to DLQ';
+        dlqBtn.onclick = async () => { await fetch(`/admin/jobs/${j.id}/dlq`, { method: 'POST' }); fetchFailed(); };
+        actions.appendChild(retryBtn); actions.appendChild(dlqBtn);
+        tbody.appendChild(tr);
+      }
+      document.getElementById('status').textContent = '';
+    }
+    fetchFailed();
+    setInterval(fetchFailed, 10000);
+  </script>
+</body>
+</html>
