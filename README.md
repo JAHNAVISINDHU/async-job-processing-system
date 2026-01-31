@@ -1,4 +1,4 @@
-```md
+
 # Async Job Processing System ✅
 
 [![Unit tests](https://github.com/JAHNAVISINDHU/async-job-processing-system/actions/workflows/ci.yml/badge.svg)](https://github.com/JAHNAVISINDHU/async-job-processing-system/actions/workflows/ci.yml)
