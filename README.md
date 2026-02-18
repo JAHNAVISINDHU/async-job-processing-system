@@ -1,9 +1,6 @@
 
 # Async Job Processing System ✅
 
-[![Unit tests](https://github.com/JAHNAVISINDHU/async-job-processing-system/actions/workflows/ci.yml/badge.svg)](https://github.com/JAHNAVISINDHU/async-job-processing-system/actions/workflows/ci.yml)
-[![Integration tests](https://github.com/JAHNAVISINDHU/async-job-processing-system/actions/workflows/integration.yml/badge.svg)](https://github.com/JAHNAVISINDHU/async-job-processing-system/actions/workflows/integration.yml)
-
 This repository contains a background job processing system with a REST API, persistent job metadata, Redis-backed queues, and an email/CSV worker pipeline.
 
 ---
